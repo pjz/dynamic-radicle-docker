@@ -129,6 +129,7 @@ if [ -n "${RADICLE_VERSION:-}" ]; then
 
     fetch_and_cache "$VERSION" "$VERSION" "radicle" "${BASE_URL}"
 
+    ln -sf "${CACHE_ROOT}/${VERSION}/bin/"* /usr/local/bin/
     export PATH="${CACHE_ROOT}/${VERSION}/bin:${PATH}"
 
     # First-run: generate identity and config
