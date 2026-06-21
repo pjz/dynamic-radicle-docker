@@ -1,0 +1,39 @@
+version: '3'
+
+vars:
+  IMAGE: pjzz/dynamic-radicle-docker
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  build:
+    desc: Build the Docker image locally
+    cmds:
+      - docker build -t {{.IMAGE}}:dev .
+
+  release:
+    desc: Tag with auto-incremented version (YYYY.MM.DD.n) and push to Docker Hub
+    deps: [build]
+    cmds:
+      - |
+        DATE=$(date +%Y.%m.%d)
+        EXISTING=$(curl -s "https://hub.docker.com/v2/repositories/{{.IMAGE}}/tags/?page_size=100" \
+          | grep -o "\"name\":\"$DATE\.[0-9]*\"" \
+          | grep -o '[0-9]*$' \
+          | sort -n \
+          | tail -1)
+        if [ -z "$EXISTING" ]; then
+          N=0
+        else
+          N=$((EXISTING + 1))
+        fi
+        VERSION="$DATE.$N"
+        echo "Releasing {{.IMAGE}}:$VERSION"
+        docker tag {{.IMAGE}}:dev {{.IMAGE}}:$VERSION
+        docker tag {{.IMAGE}}:dev {{.IMAGE}}:latest
+        docker push {{.IMAGE}}:$VERSION
+        docker push {{.IMAGE}}:latest
+        echo "Released {{.IMAGE}}:$VERSION and :latest"

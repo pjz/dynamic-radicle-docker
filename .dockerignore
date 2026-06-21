@@ -1,0 +1,5 @@
+seed/
+.git/
+README.md
+Taskfile.yaml
+docker-compose.yml

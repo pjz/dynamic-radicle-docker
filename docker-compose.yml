@@ -1,0 +1,41 @@
+services:
+  radicle-node:
+    image: pjzz/dynamic-radicle-docker:latest
+    restart: unless-stopped
+    environment:
+      - RAD_HOME=/var/lib/radicle
+      - RAD_PASSPHRASE=
+      - RADICLE_VERSION=1.9.1            # or "latest"
+      - RAD_ALIAS=seed.example.com
+      - RAD_EXTERNAL_ADDRESS=seed.example.com:8776
+      - RAD_SEEDING_POLICY=allow          # allow or block
+      - RAD_SEEDING_SCOPE=followed        # all or followed
+    ports:
+      - "8776:8776"
+    volumes:
+      - ./seed:/var/lib/radicle
+      - radicle-bin:/opt/radicle
+    healthcheck:
+      test: ["CMD", "test", "-S", "/var/lib/radicle/node/control.sock"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 60s
+
+  radicle-httpd:
+    image: pjzz/dynamic-radicle-docker:latest
+    restart: unless-stopped
+    environment:
+      - RAD_HOME=/var/lib/radicle
+      - RADICLE_HTTPD_VERSION=0.25.0      # or "latest"
+    ports:
+      - "127.0.0.1:8060:8080"
+    volumes:
+      - ./seed:/var/lib/radicle
+      - radicle-bin:/opt/radicle
+    depends_on:
+      radicle-node:
+        condition: service_healthy
+
+volumes:
+  radicle-bin:
